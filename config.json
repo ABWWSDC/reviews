@@ -1,0 +1,7 @@
+{
+  "host": "http://localhost/",
+  "user": "waltert",
+  "pw": "199405",
+  "db": "sdc",
+  "port": "5432"
+  }
