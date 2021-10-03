@@ -15,7 +15,8 @@ app.get('/', (req, res) => {
   res.json({ info: 'Node.js, Express, and Postgres API' })
 })
 
-app.get('/reviews', db.getReview)
+app.get('/reviews', db.getReview);
+app.get('/reviews/meta', db.getMeta);
 
 app.listen(port, () => {
   console.log(`listening to port: ${port}`);
