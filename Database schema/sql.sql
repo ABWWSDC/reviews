@@ -35,3 +35,18 @@ CREATE TABLE metadata (
   width int,
   confort int
 );
+
+
+-- CREATE TABLE reviews (
+-- 	id serial primary key,
+-- 	product_id int not null,
+-- 	_date bigint,
+-- 	summary varchar,
+-- 	body varchar,
+-- 	recommend bool,
+-- 	reviewer varchar,
+-- 	report bool,
+-- 	email varchar,
+-- 	response varchar,
+-- 	helpful int,
+-- )

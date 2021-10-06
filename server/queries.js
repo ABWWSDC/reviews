@@ -2,7 +2,7 @@ const Pool = require('pg').Pool
 const pool = new Pool({
   user: 'waltert',
   host: 'localhost',
-  database: 'sdc2',
+  database: 'sdc3',
   password: '199405',
   port: 5432,
 })
@@ -16,9 +16,9 @@ const getReview = (req, res) => {
     ro.*,
     rp.url
   FROM
-    reviews_org ro
+    reviews ro
   LEFT JOIN
-    reviewphoto_org rp
+    review_photo rp
   ON
     rp.review_id = ro.id
   WHERE
@@ -30,7 +30,7 @@ const getReview = (req, res) => {
       throw error
     }
     const temp = reviewParsing(results);
-
+    console.log(product_id);
     res.status(200).json(Object.values(temp));
   })
 }
@@ -46,7 +46,7 @@ const getMeta = (req, res) => {
     r.recommend,
     te.*
   FROM
-    reviews_org AS r
+    reviews AS r
   LEFT JOIN
     (SELECT
       co.id AS chara_id,
@@ -55,9 +55,9 @@ const getMeta = (req, res) => {
       cr.value,
       co.name
     FROM
-      chara_review AS cr
+      review_chara AS cr
     LEFT JOIN
-      charact_org AS co
+      chara_char AS co
     ON
       cr.chara_id = co.id
     WHERE
@@ -77,6 +77,7 @@ const getMeta = (req, res) => {
     } else {
       const temp = constructMetaData(results);
       const output = metaParsing(temp);
+      console.log(product_id);
       res.status(200).json(output);
     }
 
@@ -84,10 +85,123 @@ const getMeta = (req, res) => {
 }
 
 
+const setHelpful = (req, res) => {
+  const {review_id} = req.params;
+  var query =
+  `
+  UPDATE
+    reviews
+  SET
+    helpfulness = helpfulness+1
+  where
+    id=${review_id};
+  `;
+
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error
+    }
+    res.status(204).json('updated');
+  })
+}
+
+const setReport = (req, res) => {
+  const {review_id} = req.params;
+  var query =
+  `
+  UPDATE
+    reviews
+  SET
+    reported = true
+  where
+    id=${review_id};
+  `;
+
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error
+    }
+    res.status(204).json('reported');
+  })
+}
+
+const addReview = (req, res) => {
+  var {
+    product_id,
+    rating,
+    summary,
+    body,
+    recommend,
+    name,
+    email,
+    photos,
+    characteristics
+  } = req.body;
+  var reviewQuery =`
+  INSERT INTO
+    reviews (product_id, rating, summary, body, recommend, reviewer_name, reviewer_email, helpfulness, reported, response)
+  VALUES
+    (
+      ${product_id},
+      ${rating},
+      '${summary}',
+      '${body}',
+      ${recommend},
+      '${name}',
+      '${email}',
+      0,
+      false,
+      'null');
+  `;
+  var photoQuery = photoQueryConstruct(photos);
+  var charaQuery = charaQueryConstruct(characteristics);
+  console.log(charaQuery);
+  pool.query(reviewQuery, (error, results) => {
+    if (error) {
+      throw error
+    }
+    pool.query(photoQuery, (error, results) => {
+      if (error) {
+        throw error
+      }
+      pool.query(charaQuery, (error, results) => {
+        if (error) {
+          throw error
+        }
+        res.status(204).json('review submited');
+      })
+    })
+  })
+}
+
+
+
 
 module.exports = {
   getReview,
   getMeta,
+  setHelpful,
+  setReport,
+  addReview
+}
+
+function photoQueryConstruct (arr) {
+  var str = 'INSERT INTO review_photo (review_id, url) VALUES ';
+  // var str = 'INSERT INTO reviewphoto_org (review_id, url) VALUES ';
+  for (var i = 0; i < arr.length; i++) {
+    str += `((SELECT MAX (id) from reviews), '${arr[i]}'),`;
+  }
+  str = str.slice(0,-1);
+  return str;
+};
+
+function charaQueryConstruct (obj) {
+  var str = 'INSERT INTO review_chara (chara_id, review_id, value) VALUES '
+  for (var key in obj) {
+    str += `(${Number(key)}, (SELECT MAX (id) from reviews), ${obj[key]}),`;
+  }
+  str = str.slice(0,-1);
+  return str;
 }
 
 
@@ -171,8 +285,8 @@ function constructReviewData(result) {
     "response": result.response,
     "body": result.body,
     "date": result._date,
-    "reviewer_name": result.reviewer,
-    "helpfulness": result.helpful,
+    "reviewer_name": result.reviewer_name,
+    "helpfulness": result.helpfulness,
     "photos": []
   }
   return tempObj;
@@ -197,3 +311,5 @@ function reviewParsing(results) {
   })
   return sendback;
 }
+
+

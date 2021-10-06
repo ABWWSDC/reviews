@@ -16,7 +16,10 @@ app.get('/', (req, res) => {
 })
 
 app.get('/reviews', db.getReview);
+app.post('/reviews', db.addReview);
 app.get('/reviews/meta', db.getMeta);
+app.put('/reviews/:review_id/helpful', db.setHelpful);
+app.put('/reviews/:review_id/report', db.setReport);
 
 app.listen(port, () => {
   console.log(`listening to port: ${port}`);
