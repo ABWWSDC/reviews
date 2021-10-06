@@ -30,7 +30,6 @@ const getReview = (req, res) => {
       throw error
     }
     const temp = reviewParsing(results);
-    console.log(product_id);
     res.status(200).json(Object.values(temp));
   })
 }
@@ -77,7 +76,6 @@ const getMeta = (req, res) => {
     } else {
       const temp = constructMetaData(results);
       const output = metaParsing(temp);
-      console.log(product_id);
       res.status(200).json(output);
     }
 
@@ -155,7 +153,6 @@ const addReview = (req, res) => {
   `;
   var photoQuery = photoQueryConstruct(photos);
   var charaQuery = charaQueryConstruct(characteristics);
-  console.log(charaQuery);
   pool.query(reviewQuery, (error, results) => {
     if (error) {
       throw error
